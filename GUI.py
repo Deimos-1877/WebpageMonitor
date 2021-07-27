@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAction, QLineEdit, QMessageBox, QLabel, QComboBox
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import pyqtSlot
-
+import MainMonitor
 
 class App(QMainWindow):
 
@@ -11,18 +11,18 @@ class App(QMainWindow):
         self.title = 'Webpage Monitor Alert'
         self.left = 10
         self.top = 10
-        self.width = 400
-        self.height = 800
+        self.width = 340
+        self.height = 700
         self.initUI()
 
     def initUI(self):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
 
-        labelTitle = QLabel('Webpage Monitor pre-Alpha', self)
+        labelTitle = QLabel('Webpage Monitor Alpha 0.1', self)
         labelTitle.move(20, 2)
-        labelTitle.resize(400, 40)
-        labelTitle.setFont(QFont("Times", 20, QFont.Bold))
+        labelTitle.resize(300, 40)
+        labelTitle.setFont(QFont("Times", 18, QFont.Bold))
 
         #Part A
         y_coordinateA = 40
@@ -138,18 +138,24 @@ class App(QMainWindow):
 
     @pyqtSlot()
     def on_click(self):
+        errors_num = 0
+
         #Try URL
         try:
             URL_to_monitor = str(self.textboxURL.text())
         except:
             self.settings_enter_error(0)
             self.textboxURL.setText("")
+            errors_num += 1
+
         #Try Recipient Mail
         try:
-            Recipient_Email = str(self.textboxMailReci.text())
+            Recipient_Emails = []
+            Recipient_Emails.append(str(self.textboxMailReci.text()))
         except:
             self.settings_enter_error(1)
             self.textboxMailReci.setText("")
+            errors_num += 1
 
         #Try Sending Email
         try:
@@ -157,6 +163,7 @@ class App(QMainWindow):
         except:
             self.settings_enter_error(2)
             self.textboxMailSend.setText("")
+            errors_num += 1
 
         #Try Sending Email Password
         try:
@@ -164,6 +171,7 @@ class App(QMainWindow):
         except:
             self.settings_enter_error(3)
             self.textboxMailSendPw.setText("")
+            errors_num += 1
 
         #Try Delay Time
         try:
@@ -171,6 +179,7 @@ class App(QMainWindow):
         except:
             self.settings_enter_error(4)
             self.textboxDelay.setText("")
+            errors_num += 1
 
         #Try Start and Stop time
         Start_Stop_time = bool(self.TimeBox.currentIndex())
@@ -178,13 +187,18 @@ class App(QMainWindow):
         print(self.TimeBox.currentIndex())
         if Start_Stop_time:
             try:
-                Start_time = float(self.textboxStartTime.text())
+                Start_time_int = float(self.textboxStartTime.text())
             except:
                 self.settings_enter_error(6)
+                errors_num += 1
             try:
-                Stop_time = float(self.textboxStopTime.text())
+                Stop_time_int = float(self.textboxStopTime.text())
             except:
                 self.settings_enter_error(7)
+                errors_num += 1
+        else:
+            Start_time_int = 0
+            Stop_time_int = 0
 
         #Try LED status
         try:
@@ -192,6 +206,10 @@ class App(QMainWindow):
         except:
             LED_status = False
 
+        if bool(errors_num) != True:
+            MainMonitor.main(URL_to_monitor, Recipient_Emails, Send_Email, Send_Email_Password, Start_Stop_time, Start_time_int, Stop_time_int, Delay, LED_status)
+        else:
+            return 0
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
