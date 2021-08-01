@@ -20,7 +20,7 @@ An Email to send the alert from.
     Less secure access must be enabled in the security settings of the account. It is recommended to create a new account for this.
   
 The password to the email to send the alert from.
-    The password to the GMAIl account.
+    The password to the GMAIL account.
   
 Delay time.
     The delay time between consecutive checks. Enter this as an intiger, seconds. Please remember that quick checks may be mistaken for a Denial Of Service Attack.
@@ -35,7 +35,7 @@ Stop time
     If you have selected True for the Start and Stop time option, enter a intiger stop time in the 24 hour format. Otherwise leave empty.
   
 With LED for raspberry Pi.
-    If you are running this program on a raspberry Pi, you can connect an LED to confirm that the program is running. Select True for this option and connect and LED to GPIO pin 17. Slect False otherwise.
+    If you are running this program on a raspberry Pi, you can connect an LED to confirm that the program is running. Select True for this option and connect and LED to GPIO pin 17. Select False otherwise.
   
 Press Start Monitor to start the program. Confirmation of the program running and working should be seen in the Console.
 
