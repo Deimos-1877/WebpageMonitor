@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAction, QLineEdit, QMessageBox, QLabel, QComboBox
+from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAction, QLineEdit, QMessageBox, QLabel, QComboBox, QVBoxLayout, QTabWidget, QFileDialog
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import pyqtSlot
 import MainMonitor
@@ -8,24 +8,111 @@ class App(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.title = 'Webpage Monitor Alert'
+        self.title = 'Webpage Monitor Alert Alpha 0.2'
         self.left = 10
         self.top = 10
-        self.width = 340
-        self.height = 700
+        self.width = 380
+        self.height = 740
         self.initUI()
+        self.table_widget = Tabs_Widget(self)
+        self.setCentralWidget(self.table_widget)
+        self.show()
 
     def initUI(self):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
 
-        labelTitle = QLabel('Webpage Monitor Alpha 0.1', self)
-        labelTitle.move(20, 2)
-        labelTitle.resize(300, 40)
-        labelTitle.setFont(QFont("Times", 18, QFont.Bold))
+
+
+
+class Tabs_Widget(QWidget):
+    
+    def __init__(self, parent):
+        super(QWidget, self).__init__(parent)
+        self.layout = QVBoxLayout(self)
+        
+        # Initialize tab screen
+        self.tabs = QTabWidget()
+        self.tab1 = QWidget()
+        self.tab2 = QWidget()
+        self.tabs.resize(300,200)
+        
+        # Add tabs
+        self.tabs.addTab(self.tab1,"Run Monitor")
+        self.tabs.addTab(self.tab2,"Settings")
+        
+        # Create first tab
+        self.tab1.layout = QVBoxLayout(self)
+        self.run_monitor_widget = Run_Monitor(self)
+        self.tab1.layout.addWidget(self.run_monitor_widget)
+        self.tab1.setLayout(self.tab1.layout)
+
+        # Create second tab
+        self.tab2.layout = QVBoxLayout(self)
+        self.settings_widget = Settings_Widget(self)
+        self.tab2.layout.addWidget(self.settings_widget)
+        self.tab2.setLayout(self.tab2.layout)
+        
+        # Add tabs to widget
+        self.layout.addWidget(self.tabs)
+        self.setLayout(self.layout)
+
+
+class Run_Monitor(QWidget):
+    def __init__(self, parent):
+        super(QWidget, self).__init__(parent)
+        self.layout = QVBoxLayout(self)
+
+        #Part select settings
+        y_coordinate = 10
+        selected_settings = QLabel('Selected settings:', self)
+        selected_settings.move(20, y_coordinate)
+        selected_settings.resize(300, 40)
+        selected_settings.setFont(QFont('Arial', 14))
+
+        self.textbox_selected_settings = QLineEdit(self)
+        self.textbox_selected_settings.move(20, y_coordinate + 30)
+        self.textbox_selected_settings.resize(300, 30)
+        self.textbox_selected_settings.setText("Select a settings file")
+        self.textbox_selected_settings.setReadOnly(True)
+        select_settings_button = QPushButton(self)
+        select_settings_button.setText("Select settings file")
+        select_settings_button.move(20, y_coordinate + 65)
+        select_settings_button.resize(140, 20)
+        select_settings_button.clicked.connect(self.select_settings_file)
+
+        #Part show selected settings
+        show_settings_button = QPushButton(self)
+        show_settings_button.setText("Show current settings")
+        show_settings_button.move(165, y_coordinate + 65)
+        show_settings_button.resize(155, 20)
+
+    def select_settings_file(self):
+        self.openFileNameDialog()
+        self.show()
+
+    def openFileNameDialog(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","All Files (*);;Python Files (*.py)", options=options)
+        if fileName:
+            global selected_file_name 
+            selected_file_name = fileName
+            print(selected_file_name)
+        self.textbox_selected_settings.setText(selected_file_name)
+
+
+
+
+
+class Settings_Widget(QWidget):
+
+    def __init__(self, parent):
+        super(QWidget, self).__init__(parent)
+        self.layout = QVBoxLayout(self)
 
         #Part A
-        y_coordinateA = 40
+        y_coordinateA = 10
         labelA = QLabel('URL to monitor', self)
         labelA.move(20, y_coordinateA)
         labelA.resize(280, 40)
@@ -70,7 +157,7 @@ class App(QMainWindow):
 
         #Part E
         y_coordinateE = y_coordinateD + 65
-        labelE = QLabel('Dealy time', self)
+        labelE = QLabel('Delay time', self)
         labelE.move(20, y_coordinateE)
         labelE.resize(280, 40)
 
@@ -122,7 +209,7 @@ class App(QMainWindow):
         self.LEDBox.move(20, y_coordinateI + 30)
 
         #Change settings button
-        self.button = QPushButton('Start monitor', self)
+        self.button = QPushButton('Save Settings', self)
         self.button.move(20, y_coordinateI + 85)
         self.button.resize(120, 20)
 
@@ -135,6 +222,8 @@ class App(QMainWindow):
         string_error_code = str(error_code)
         QMessageBox.question(self, 'Error' + string_error_code, error_messages[error_code], QMessageBox.Ok,
                              QMessageBox.Ok)
+
+    
 
     @pyqtSlot()
     def on_click(self):
@@ -210,6 +299,8 @@ class App(QMainWindow):
             MainMonitor.main(URL_to_monitor, Recipient_Emails, Send_Email, Send_Email_Password, Start_Stop_time, Start_time_int, Stop_time_int, Delay, LED_status)
         else:
             return 0
+
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
