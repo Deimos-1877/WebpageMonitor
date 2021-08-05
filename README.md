@@ -12,8 +12,8 @@ The program requires the following input:
 A webpage to monitor. 
     This should be entered with http:// or https:// at the beginning of the URL to function properly.
   
-An Email to alert.
-    The program will send an email alert to the entered email, once the webpage changes.
+An Email/Emails to alert.
+    The program will send an email alert to the entered email, once the webpage changes. Enter one email, or enter multiple emails seperated by a comma (no spaces)
   
 An Email to send the alert from.
     This must be a GMAIL account. Enter only the username (everything before @gmail.com). 
