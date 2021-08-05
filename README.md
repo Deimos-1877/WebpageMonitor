@@ -3,7 +3,7 @@ A program to check for changes to a webpage and send an alert when the webpage c
 
 Be sure to have the following python packages installed (use pip install ...): bs4; yagmail; PyQt5
 
-Execute the file Execute.py to start the program.
+Execute the file WebpageMonitor.py to start the program.
 A graphical user interface should appear, asking for input.
 
 
