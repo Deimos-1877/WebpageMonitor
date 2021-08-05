@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAc
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import pyqtSlot
 import MainMonitor
+import json
 
 class App(QMainWindow):
 
@@ -86,23 +87,47 @@ class Run_Monitor(QWidget):
         show_settings_button.setText("Show current settings")
         show_settings_button.move(165, y_coordinate + 65)
         show_settings_button.resize(155, 20)
+        show_settings_button.clicked.connect(self.show_current_settings)
+
+        #Start monitor button
+        start_monitor_button = QPushButton(self)
+        start_monitor_button.setText('Start monitor')
+        start_monitor_button.move(20, y_coordinate + 95)
+        start_monitor_button.resize(300, 20)
+        start_monitor_button.clicked.connect(self.start_monitor)
+
 
     def select_settings_file(self):
         self.openFileNameDialog()
-        self.show()
+
 
     def openFileNameDialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", "","All Files (*);;Python Files (*.py)", options=options)
         if fileName:
+            global selected_settings
             global selected_file_name 
             selected_file_name = fileName
             print(selected_file_name)
-        self.textbox_selected_settings.setText(selected_file_name)
+            selected_settings = json.load(open(selected_file_name))
+            print(selected_settings)
+            self.textbox_selected_settings.setText(selected_file_name)
 
+    def show_current_settings(self):
+        try:
+            if selected_settings:
+                string_selected_settings = 'URL: %s;\nRecipient Emails: %s;\nSend Email: %s;\nSend Email Password: %s;\nDelay: %s;\nWith Start Time: %s; Start time: %s; End time: %s;\nWith Pi LED: %s' % (selected_settings['URL_to_monitor'], selected_settings['Recipient_Emails'], selected_settings['Send_Email'], selected_settings['Send_Email_Password'], selected_settings['Delay'], selected_settings['Start_Stop_time'], selected_settings['Start_time_int'], selected_settings['Stop_time_int'], selected_settings['LED_status'])
+                QMessageBox.question(self , 'Selected Settings:', string_selected_settings, QMessageBox.Ok, QMessageBox.Ok)
+        except: 
+            QMessageBox.question(self, 'Error', 'No settings selected. Please chose a settings file', QMessageBox.Ok, QMessageBox.Ok)
+            
 
-
+    def start_monitor(self):
+        try: 
+            MainMonitor.main(selected_settings['URL_to_monitor'], selected_settings['Recipient_Emails'], selected_settings['Send_Email'], selected_settings['Send_Email_Password'], selected_settings['Start_Stop_time'], selected_settings['Start_time_int'], selected_settings['Stop_time_int'], selected_settings['Delay'], selected_settings['LED_status'])
+        except:
+            QMessageBox.question(self, 'Error', 'No settings selected. Please chose a settings file', QMessageBox.Ok, QMessageBox.Ok)
 
 
 class Settings_Widget(QWidget):
@@ -218,7 +243,7 @@ class Settings_Widget(QWidget):
         self.show()
 
     def settings_enter_error(self, error_code):
-        error_messages = ["Please enter a URL", "Please enter a Recipient Mail", "Please enter an Email to send the alerts from", "Please enter the password for the Email to send the alerts from", "Please enter an integer into Delay time", "Please enter if you have a start/stop time", "Please enter a valid start time", "Please enter a valid stop time"]
+        error_messages = ["Please enter a URL", "Please enter a Recipient Mail", "Please enter an Email to send the alerts from", "Please enter the password for the Email to send the alerts from", "Please enter an integer into Delay time", "Please enter if you have a start/stop time", "Please enter a valid start time", "Please enter a valid stop time", "Please fill in the following fields: URL to monitor; Recipient Emails; Send email; Send email password; Delay", "Please enter a start and stop time or set the start stop setting to false"]
         string_error_code = str(error_code)
         QMessageBox.question(self, 'Error' + string_error_code, error_messages[error_code], QMessageBox.Ok,
                              QMessageBox.Ok)
@@ -240,7 +265,9 @@ class Settings_Widget(QWidget):
         #Try Recipient Mail
         try:
             Recipient_Emails = []
-            Recipient_Emails.append(str(self.textboxMailReci.text()))
+            print(str(self.textboxMailReci.text()).split(','))
+            for i in str(self.textboxMailReci.text()).split(','):
+                Recipient_Emails.append(i)
         except:
             self.settings_enter_error(1)
             self.textboxMailReci.setText("")
@@ -272,8 +299,8 @@ class Settings_Widget(QWidget):
 
         #Try Start and Stop time
         Start_Stop_time = bool(self.TimeBox.currentIndex())
-        print(Start_Stop_time)
-        print(self.TimeBox.currentIndex())
+        # print(Start_Stop_time)
+        # print(self.TimeBox.currentIndex())
         if Start_Stop_time:
             try:
                 Start_time_int = float(self.textboxStartTime.text())
@@ -295,10 +322,29 @@ class Settings_Widget(QWidget):
         except:
             LED_status = False
 
+        if URL_to_monitor == "" or Recipient_Emails == "" or Send_Email == "" or Send_Email_Password == "" or Delay == "":
+            self.settings_enter_error(8)
+            errors_num += 1
+        
+        print(errors_num)
+
         if bool(errors_num) != True:
-            MainMonitor.main(URL_to_monitor, Recipient_Emails, Send_Email, Send_Email_Password, Start_Stop_time, Start_time_int, Stop_time_int, Delay, LED_status)
+            self.saveFileDialog()
+            settings_to_save = {'URL_to_monitor' : URL_to_monitor, 'Recipient_Emails' : Recipient_Emails , 'Send_Email' : Send_Email, 'Send_Email_Password' : Send_Email_Password, 'Delay' : Delay, 'Start_Stop_time' : Start_Stop_time, 'Start_time_int' : Start_time_int, 'Stop_time_int' : Stop_time_int,  'LED_status' : LED_status}
+            json_settings = json.dumps(settings_to_save)
+            open(new_file_name + '.json', 'w').write(json_settings)
+        #    MainMonitor.main(URL_to_monitor, Recipient_Emails, Send_Email, Send_Email_Password, Start_Stop_time, Start_time_int, Stop_time_int, Delay, LED_status)
+
+    def saveFileDialog(self):
+        global new_file_name
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getSaveFileName(self,"QFileDialog.getSaveFileName()","","Json Files (*.json)", options=options)
+        if fileName:
+            print(fileName)
+            new_file_name = fileName
         else:
-            return 0
+            print('an error occured while saving file: 01')
 
 
 
